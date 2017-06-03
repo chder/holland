@@ -85,7 +85,7 @@ class BackupRunner(object):
 
         :raises: BackupError if a backup fails
         """
-
+        
         for i in xrange(MAX_SPOOL_RETRIES):
             try:
                 spool_entry = self.spool.add_backup(name)
@@ -132,11 +132,11 @@ class BackupRunner(object):
 
         spool_entry.config['holland:backup']['stop-time'] = time.time()
         if not dry_run and not spool_entry.config['holland:backup']['failed']:
-            final_size = directory_size(spool_entry.path)
+            final_size = float(directory_size(spool_entry.path))
             LOG.info("Final on-disk backup size %s", format_bytes(final_size))
             if estimated_size > 0:
                 LOG.info("%.2f%% of estimated size %s",
-                     (float(final_size) / estimated_size)*100.0,
+                     (final_size / estimated_size)*100.0,
                      format_bytes(estimated_size))
 
             spool_entry.config['holland:backup']['on-disk-size'] = final_size
@@ -210,12 +210,12 @@ class BackupRunner(object):
     def check_available_space(self, plugin, spool_entry, dry_run=False):
         available_bytes = disk_free(spool_entry.path)
 
-        estimated_bytes_required = plugin.estimate_backup_size()
+        estimated_bytes_required = float(plugin.estimate_backup_size())
         LOG.info("Estimated Backup Size: %s",
                  format_bytes(estimated_bytes_required))
 
         config = plugin.config['holland:backup']
-        adjustment_factor = config['estimated-size-factor']
+        adjustment_factor = float(config['estimated-size-factor'])
         adjusted_bytes_required = (estimated_bytes_required*adjustment_factor)
 
         if adjusted_bytes_required != estimated_bytes_required:
@@ -236,4 +236,4 @@ class BackupRunner(object):
                 LOG.error(msg)
                 if not dry_run:
                     raise BackupError(msg)
-        return estimated_bytes_required
+        return float(estimated_bytes_required)
